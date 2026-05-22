@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBO Oracle — 외국인 투수 영입 리스크 거버넌스 엔진</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F19;
+    --bg-2: #0E1424;
+    --neon: #00E5FF;
+    --purple: #B026FF;
+    --green: #00FF94;
+    --red: #FF3B6B;
+    --yellow: #FFD93B;
+    --text: #E8EDF7;
+    --text-dim: #8A93A8;
+    --border: rgba(255,255,255,0.08);
+    --glass: rgba(255,255,255,0.03);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif; }
+
+  /* Animated background */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+  }
+  .bg-glow {
+    position: fixed; z-index: 0; border-radius: 50%;
+    filter: blur(120px); opacity: 0.25; pointer-events: none;
+  }
+  .glow-1 { width: 500px; height: 500px; background: var(--neon); top: -150px; left: -100px; animation: float1 14s ease-in-out infinite; }
+  .glow-2 { width: 450px; height: 450px; background: var(--purple); top: 20%; right: -120px; animation: float2 18s ease-in-out infinite; }
+  @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
+  @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-50px,60px)} }
+
+  .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: rgba(11,15,25,0.7);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  .logo-mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--neon), var(--purple));
+    display: grid; place-items: center; font-weight: 900; color: #000; font-size: 18px;
+    box-shadow: 0 0 20px rgba(0,229,255,0.4);
+  }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: var(--neon); }
+  @media (max-width: 720px){ .nav-links{display:none} }
+
+  /* Hero */
+  .hero { padding: 90px 0 60px; text-align: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 100px; font-size: 13px;
+    background: var(--glass); border: 1px solid var(--border);
+    color: var(--neon); margin-bottom: 28px;
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 68px); font-weight: 900; line-height: 1.05;
+    letter-spacing: -0.03em; margin-bottom: 22px;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, var(--neon) 0%, var(--purple) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p { font-size: clamp(15px,2vw,19px); color: var(--text-dim); max-width: 620px; margin: 0 auto 16px; }
+  .hero .disclaimer { font-size: 13px; color: var(--text-dim); max-width: 560px; margin: 0 auto 36px; opacity: .7; }
+  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    padding: 13px 26px; border-radius: 12px; font-weight: 600; font-size: 15px;
+    cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--neon), var(--purple)); color: #000; box-shadow: 0 4px 24px rgba(0,229,255,0.3); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,255,0.5); }
+  .btn-ghost { background: var(--glass); border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--neon); }
+
+  /* Stat strip */
+  .stat-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin: 50px 0 70px; }
+  @media (max-width:720px){ .stat-strip{grid-template-columns:repeat(2,1fr)} }
+  .stat-card {
+    background: var(--glass); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px 20px; text-align: center; backdrop-filter: blur(10px);
+  }
+  .stat-card .num { font-size: 34px; font-weight: 700; color: var(--neon); }
+  .stat-card .lbl { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+  /* Section */
+  .section { padding: 60px 0; }
+  .section-head { margin-bottom: 40px; }
+  .section-tag { color: var(--purple); font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+  .section-head h2 { font-size: clamp(26px,4vw,40px); font-weight: 800; letter-spacing: -0.02em; margin-top: 8px; }
+  .section-head p { color: var(--text-dim); margin-top: 10px; max-width: 600px; }
+
+  /* Bento grid */
+  .bento { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+  @media (max-width:860px){ .bento{grid-template-columns:1fr} }
+  .card {
+    background: var(--glass); border: 1px solid var(--border); border-radius: 18px;
+    padding: 28px; backdrop-filter: blur(10px); transition: transform .25s, border-color .25s;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(0,229,255,0.3); }
+  .card .icon { width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 18px; font-size: 22px; }
+  .icon-neon { background: rgba(0,229,255,0.12); }
+  .icon-purple { background: rgba(176,38,255,0.12); }
+  .icon-green { background: rgba(0,255,148,0.12); }
+  .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+  .card p { color: var(--text-dim); font-size: 14px; }
+  .span-2 { grid-column: span 2; }
+  @media (max-width:860px){ .span-2{grid-column:span 1} }
+
+  /* Risk evaluator (interactive demo) */
+  .evaluator { background: var(--bg-2); border: 1px solid var(--border); border-radius: 24px; padding: 36px; }
+  .eval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+  @media (max-width:860px){ .eval-grid{grid-template-columns:1fr} }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 7px; }
+  .field input, .field select {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    color: var(--text); font-size: 15px; font-family: 'JetBrains Mono', monospace;
+    transition: border-color .2s;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--neon); }
+  .preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+  .preset {
+    padding: 7px 13px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-dim);
+    transition: all .2s;
+  }
+  .preset:hover { border-color: var(--neon); color: var(--neon); }
+
+  /* Result gauge */
+  .result-panel { display: grid; place-items: center; text-align: center; }
+  .gauge { position: relative; width: 220px; height: 220px; margin-bottom: 20px; }
+  .gauge svg { transform: rotate(-90deg); }
+  .gauge-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 16; }
+  .gauge-fill { fill: none; stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1), stroke 0.5s; }
+  .gauge-center { position: absolute; inset: 0; display: grid; place-items: center; flex-direction: column; }
+  .gauge-pct { font-size: 52px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .gauge-lbl { font-size: 13px; color: var(--text-dim); }
+  .tier-badge { padding: 8px 20px; border-radius: 100px; font-weight: 700; font-size: 15px; margin-bottom: 14px; }
+  .tier-green { background: rgba(0,255,148,0.15); color: var(--green); border: 1px solid rgba(0,255,148,0.3); }
+  .tier-yellow { background: rgba(255,217,59,0.15); color: var(--yellow); border: 1px solid rgba(255,217,59,0.3); }
+  .tier-red { background: rgba(255,59,107,0.15); color: var(--red); border: 1px solid rgba(255,59,107,0.3); }
+  .result-note { font-size: 13px; color: var(--text-dim); max-width: 100%; text-align: left; line-height: 1.7; }
+
+  /* Player table */
+  .table-wrap { background: var(--glass); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; backdrop-filter: blur(10px); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 16px 20px; font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:last-child td { border-bottom: none; }
+  tr { transition: background .2s; }
+  tbody tr:hover { background: rgba(0,229,255,0.04); }
+  .pill { padding: 4px 11px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .pill-s { background: rgba(0,255,148,0.12); color: var(--green); }
+  .pill-f { background: rgba(255,59,107,0.12); color: var(--red); }
+  .war-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+  /* Honesty section */
+  .honesty { background: linear-gradient(135deg, rgba(176,38,255,0.06), rgba(0,229,255,0.04)); border: 1px solid var(--border); border-radius: 24px; padding: 40px; }
+  .honesty-list { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  @media (max-width:720px){ .honesty-list{grid-template-columns:1fr} }
+  .honesty-item { display: flex; gap: 12px; align-items: flex-start; }
+  .honesty-item .mark { color: var(--yellow); font-size: 18px; flex-shrink: 0; }
+  .honesty-item p { font-size: 14px; color: var(--text-dim); }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--border); padding: 40px 0; margin-top: 60px; text-align: center; }
+  footer p { color: var(--text-dim); font-size: 13px; }
+
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s, transform .7s; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow glow-1"></div>
+<div class="bg-glow glow-2"></div>
+
+<nav>
+  <div class="container nav-inner">
+    <div class="logo"><div class="logo-mark">O</div> KBO Oracle</div>
+    <div class="nav-links">
+      <a href="#how">작동 원리</a>
+      <a href="#demo">위험 평가기</a>
+      <a href="#data">학습 데이터</a>
+      <a href="#honesty">한계</a>
+    </div>
+    <a href="#demo" class="btn btn-primary" style="padding:9px 18px;font-size:14px">평가 해보기</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="badge"><span class="dot"></span> ML Risk Governance Engine · Ver 15.2</div>
+    <h1>외국인 투수 영입,<br><span class="grad">데이터로 위험을 측정</span>합니다</h1>
+    <p>raw 야구 스탯만으로 KBO 외국인 투수의 <strong>생존 확률</strong>을 calibrated probability로 출력하는 머신러닝 기반 투자 위험 거버넌스 엔진.</p>
+    <p class="disclaimer">이 시스템은 성공을 예측하지 않습니다. 불확실성 속에서 피할 수 있는 투자 실패를 줄입니다. 최종 의사결정 권한은 인간에게 있습니다.</p>
+    <div class="cta-row">
+      <a href="#demo" class="btn btn-primary">🎯 위험 평가 데모</a>
+      <a href="#how" class="btn btn-ghost">작동 원리 보기</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="stat-strip reveal">
+    <div class="stat-card"><div class="num mono" data-count="26">26</div><div class="lbl">학습 데이터 (명)</div></div>
+    <div class="stat-card"><div class="num mono">3</div><div class="lbl">데이터 누수 차단</div></div>
+    <div class="stat-card"><div class="num mono">178</div><div class="lbl">통과 테스트</div></div>
+    <div class="stat-card"><div class="num mono">14</div><div class="lbl">입력 변수</div></div>
+  </div>
+</div>
+
+<!-- How it works -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-tag">How it works</div>
+      <h2>예측 도구가 아닌, 위험 거버넌스 엔진</h2>
+      <p>"누가 에이스인가?"가 아니라 "누가 100만 달러 투자 후 붕괴하는가?"에 답합니다.</p>
+    </div>
+    <div class="bento">
+      <div class="card reveal">
+        <div class="icon icon-neon">📊</div>
+        <h3>Calibrated Probability</h3>
+        <p>sklearn LogisticRegression + Platt scaling으로 "70%"라고 말하면 실제로도 70% 생존하도록 보정된 확률을 출력합니다.</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon icon-purple">🎯</div>
+        <h3>Risk Tier 분류</h3>
+        <p>🟢 GREEN(계약 가능) / 🟡 YELLOW(추가 검증) / 🔴 RED(영입 거부) 3단계로 의사결정을 지원합니다.</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon icon-green">🔬</div>
+        <h3>설명 가능한 분해</h3>
+        <p>선형 계수 × 정규화 변수로 "이 선수의 어떤 특성이 위험 신호인지" 야구 언어로 분해합니다.</p>
+      </div>
+      <div class="card reveal span-2">
+        <div class="icon icon-neon">⚖️</div>
+        <h3>Lore-Free 원칙</h3>
+        <p>"좌완 + 포크볼 = 성공" 같은 검증 안 된 휴리스틱을 전부 제거했습니다. 모든 가중치는 데이터에서 학습합니다. 도메인 직관은 라벨 정의(WAR 3.5 = 재계약 임계점)에만 반영됩니다.</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon icon-purple">🛡️</div>
+        <h3>데이터 누수 3번 차단</h3>
+        <p>회귀 누수, 사전 imputation 누수, 2년차 WAR 누수를 발견하고 모두 차단했습니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interactive Demo -->
+<section class="section" id="demo">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-tag">Live Demo</div>
+      <h2>외인 후보 위험 평가기</h2>
+      <p>영입 후보의 직전 시즌 스탯을 입력하면 KBO 생존 확률을 계산합니다. (브라우저에서 동작하는 간소화 데모)</p>
+    </div>
+    <div class="evaluator reveal">
+      <div class="eval-grid">
+        <div>
+          <div class="preset-row">
+            <span style="font-size:12px;color:var(--text-dim);width:100%;margin-bottom:4px">실제 사례 불러오기 ↓</span>
+            <button class="preset" onclick="loadPreset('ponce')">Cody Ponce (대박)</button>
+            <button class="preset" onclick="loadPreset('sampson')">Adrian Sampson (실패)</button>
+            <button class="preset" onclick="loadPreset('veneziano')">K/9 낮은 케이스</button>
+          </div>
+          <div class="field">
+            <label>직전 리그</label>
+            <select id="in-league">
+              <option value="NPB">NPB (일본)</option>
+              <option value="MLB">MLB</option>
+              <option value="AAA-PCL">AAA-PCL</option>
+              <option value="AAA-IL">AAA-IL (함정 리그)</option>
+            </select>
+          </div>
+          <div class="field"><label>K/9 (9이닝당 탈삼진)</label><input type="number" id="in-k9" value="8.5" step="0.1"></div>
+          <div class="field"><label>BB/9 (9이닝당 볼넷)</label><input type="number" id="in-bb9" value="2.5" step="0.1"></div>
+          <div class="field"><label>평균 구속 (mph)</label><input type="number" id="in-velo" value="93.0" step="0.1"></div>
+          <div class="field"><label>이닝 (IP)</label><input type="number" id="in-ip" value="130" step="1"></div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="evaluate()">위험 평가 실행 →</button>
+        </div>
+        <div class="result-panel">
+          <div class="gauge">
+            <svg width="220" height="220" viewBox="0 0 220 220">
+              <circle class="gauge-track" cx="110" cy="110" r="92"></circle>
+              <circle class="gauge-fill" id="gauge-fill" cx="110" cy="110" r="92"
+                stroke="#00E5FF" stroke-dasharray="578" stroke-dashoffset="578"></circle>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-pct mono" id="gauge-pct">—</div>
+              <div class="gauge-lbl">생존 확률</div>
+            </div>
+          </div>
+          <div class="tier-badge tier-yellow" id="tier-badge">평가 대기 중</div>
+          <p class="result-note" id="result-note">왼쪽에서 스탯을 입력하고 평가를 실행하세요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Data table -->
+<section class="section" id="data">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-tag">Training Data</div>
+      <h2>학습 데이터 (26명 검증 외인)</h2>
+      <p>WAR 3.5 이상이면 Success(재계약), 미만이면 Failure(방출). 도메인 전문가가 정의한 실제 재계약 임계점 기준.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table>
+        <thead>
+          <tr><th>선수</th><th>직전 리그</th><th>K/9</th><th>BB/9</th><th>KBO WAR</th><th>결과</th></tr>
+        </thead>
+        <tbody id="data-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Honesty -->
+<section class="section" id="honesty">
+  <div class="container">
+    <div class="honesty reveal">
+      <div class="section-tag">Honest Limitations</div>
+      <h2 style="font-size:28px;font-weight:800;margin-top:8px">정직한 한계</h2>
+      <p style="color:var(--text-dim);margin-top:10px">자랑이 아니라 진짜 한계를 명시합니다. 이게 신뢰의 기본입니다.</p>
+      <div class="honesty-list">
+        <div class="honesty-item"><span class="mark">⚠</span><p><strong style="color:var(--text)">Small-N (n=26):</strong> 변수당 데이터 1.8개로 ML 통계 기준에 한참 미달합니다.</p></div>
+        <div class="honesty-item"><span class="mark">⚠</span><p><strong style="color:var(--text)">KBO 트래킹 비공개:</strong> IVB, 무브먼트 같은 데이터는 추정값입니다.</p></div>
+        <div class="honesty-item"><span class="mark">⚠</span><p><strong style="color:var(--text)">정확도 60%대:</strong> "확률 도구"지 "예언자"가 아닙니다.</p></div>
+        <div class="honesty-item"><span class="mark">⚠</span><p><strong style="color:var(--text)">외삽 위험:</strong> 학습 분포 밖 케이스(7이닝 표본 등)는 평가 불가입니다.</p></div>
+      </div>
+
+      <div style="margin-top:32px;padding:24px;background:rgba(255,59,107,0.06);border:1px solid rgba(255,59,107,0.2);border-radius:16px">
+        <h3 style="font-size:17px;font-weight:700;margin-bottom:12px;color:var(--text)">🚫 모델이 구조적으로 못 잡는 것 — 실측 사례: Erick Fedde</h3>
+        <p style="font-size:14px;color:var(--text-dim);margin-bottom:10px"><strong style="color:var(--red)">모델 평가: 48.4% YELLOW</strong> → <strong style="color:var(--green)">실제: 2023 NC에서 WAR 7.63 대박, MLB 복귀</strong></p>
+        <p style="font-size:14px;color:var(--text-dim);line-height:1.7">페디의 직전 2022 MLB 시즌은 객관적으로 나빴습니다(FIP 5.0). 스탯만 보면 모델이 의심하는 게 합리적이죠. 하지만 페디는 드래프트 1라운드 엘리트가 재정비하러 온 케이스였고, 그 성공 요인의 99%가 스탯 밖(유망주 등급·반등기·동기)에 있었습니다. <strong style="color:var(--text)">모델은 '겉보기 좋은데 숨은 위험'을 거르고, 인간은 '겉보기 나쁜데 숨은 보석'을 찾습니다.</strong> 그래서 이건 예측 엔진이 아니라 리스크 거버넌스 엔진입니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>KBO Oracle · Risk Governance Engine Ver 15.2 · Built by 양승수</p>
+    <p style="margin-top:8px;opacity:.6">This engine supports, not replaces, scouting judgment.</p>
+  </div>
+</footer>
+
+<script>
+// ===== 학습 데이터 =====
+const EMBEDDED_PLAYERS = [{"name": "Cody Ponce", "league": "NPB", "war": 8.38, "label": "Success", "k9": 7.52, "bb9": 2.04}, {"name": "Dan Straily", "league": "MLB", "war": 8.12, "label": "Success", "k9": 6.23, "bb9": 4.16}, {"name": "Eric Jokisch", "league": "AAA-PCL", "war": 6.02, "label": "Success", "k9": 7.33, "bb9": 2.78}, {"name": "Yariel Jurado", "league": "AAA-IL", "war": 5.88, "label": "Success", "k9": 7.53, "bb9": 1.51}, {"name": "Zach Logue", "league": "AAA-PCL", "war": 5.34, "label": "Success", "k9": 8.41, "bb9": 2.59}, {"name": "Drew Rucinski", "league": "MLB", "war": 5.31, "label": "Success", "k9": 6.88, "bb9": 3.31}, {"name": "Odrisamer Despaigne", "league": "AAA-IL", "war": 4.88, "label": "Success", "k9": 8.98, "bb9": 3.18}, {"name": "Denyi Reyes", "league": "AAA-IL", "war": 4.47, "label": "Success", "k9": 7.07, "bb9": 3.66}, {"name": "Charlie Barnes", "league": "AAA-IL", "war": 4.46, "label": "Success", "k9": 7.34, "bb9": 2.84}, {"name": "Chad Bell", "league": "AAA-IL", "war": 4.29, "label": "Success", "k9": 8.74, "bb9": 2.86}, {"name": "William Cuevas", "league": "AAA-IL", "war": 4.27, "label": "Success", "k9": 8.05, "bb9": 2.53}, {"name": "Raul Alcantara", "league": "AAA-PCL", "war": 3.84, "label": "Success", "k9": 5.72, "bb9": 1.08}, {"name": "Dietrich Enns", "league": "NPB", "war": 3.77, "label": "Success", "k9": 5.0, "bb9": 3.83}, {"name": "Cole Irvin", "league": "MLB", "war": 2.57, "label": "Failure", "k9": 6.32, "bb9": 2.35}, {"name": "Brock Dykxhoorn", "league": "AAA-PCL", "war": 2.29, "label": "Failure", "k9": 8.86, "bb9": 2.76}, {"name": "Adrian Sampson", "league": "MLB", "war": 1.7, "label": "Failure", "k9": 7.25, "bb9": 2.59}, {"name": "Shaun Anderson", "league": "AAA-IL", "war": 1.33, "label": "Failure", "k9": 7.77, "bb9": 3.27}, {"name": "Jordan Balazovic", "league": "AAA-IL", "war": 1.25, "label": "Failure", "k9": 10.6, "bb9": 6.31}, {"name": "Deck McGuire", "league": "AAA-IL", "war": 1.22, "label": "Failure", "k9": 7.85, "bb9": 4.4}, {"name": "Eddie Butler", "league": "MLB", "war": 0.75, "label": "Failure", "k9": 5.26, "bb9": 3.44}, {"name": "Glenn Sparkman", "league": "NPB", "war": 0.71, "label": "Failure", "k9": 7.41, "bb9": 4.24}, {"name": "Mike Montgomery", "league": "MLB", "war": 0.6, "label": "Failure", "k9": 6.75, "bb9": 1.69}, {"name": "Justin Haley", "league": "AAA-IL", "war": 0.4, "label": "Failure", "k9": 8.47, "bb9": 2.61}, {"name": "Beau Sulser", "league": "AAA-IL", "war": 0.35, "label": "Failure", "k9": 9.53, "bb9": 2.22}, {"name": "Jacob Turner", "league": "AAA-IL", "war": 0.06, "label": "Failure", "k9": 6.49, "bb9": 3.2}, {"name": "Anthony Ranaudo", "league": "AAA-IL", "war": -0.22, "label": "Failure", "k9": 6.79, "bb9": 1.23}];
+
+let PLAYERS = EMBEDDED_PLAYERS;
+
+// 데이터 로드 (내장 우선, 같은 폴더 kbo_data.json 있으면 시도)
+async function loadData() {
+  // file:// 로 열어도 작동하도록 내장 데이터를 기본으로 사용
+  // (서버 배포 시 kbo_data.json이 있으면 자동 갱신 시도)
+  if (location.protocol !== 'file:') {
+    try {
+      const res = await fetch('kbo_data.json?' + Date.now());
+      if (res.ok) {
+        const ext = await res.json();
+        if (Array.isArray(ext) && ext.length > 0) {
+          PLAYERS = ext;
+          console.log('외부 데이터 ' + ext.length + '명 로드됨');
+        }
+      }
+    } catch(e) {
+      console.log('내장 데이터 사용');
+    }
+  }
+  renderTable();
+  renderStats();
+}
+
+function renderStats() {
+  const total = PLAYERS.length;
+  const successCount = PLAYERS.filter(p => p.war != null && p.war >= 3.5).length;
+  const countEl = document.querySelector('.stat-card .num.mono[data-count]');
+  if (countEl) {
+    countEl.textContent = total;
+    countEl.setAttribute('data-count', total);
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById('data-body');
+  tbody.innerHTML = '';
+  const sorted = [...PLAYERS].sort((a,b) => (b.war ?? -999) - (a.war ?? -999));
+  sorted.forEach(p => {
+    const tr = document.createElement('tr');
+    const pill = (p.label === 'Success' || (p.war != null && p.war >= 3.5)) ? 'pill-s' : 'pill-f';
+    const isSuccess = p.war != null && p.war >= 3.5;
+    const warColor = isSuccess ? 'var(--green)' : 'var(--red)';
+    tr.innerHTML = `
+      <td style="font-weight:600">${p.name}</td>
+      <td style="color:var(--text-dim)">${p.league || '—'}</td>
+      <td class="mono">${p.k9 ?? '—'}</td>
+      <td class="mono">${p.bb9 ?? '—'}</td>
+      <td class="war-val" style="color:${warColor}">${p.war != null ? p.war.toFixed(2) : '—'}</td>
+      <td><span class="pill ${pill}">${isSuccess ? '재계약' : '방출'}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ===== 위험 평가 로직 (간소화 로지스틱 모델) =====
+// 실제 sklearn 모델의 계수를 근사한 데모용 가중치
+function loadPreset(key){
+  const presets = {
+    ponce:      { league:'NPB',     k9:7.52, bb9:2.04, velo:94.0, ip:97 },
+    sampson:    { league:'AAA-IL',  k9:7.25, bb9:2.59, velo:92.5, ip:150 },
+    veneziano:  { league:'AAA-IL',  k9:3.47, bb9:3.86, velo:93.6, ip:46 },
+  };
+  const p = presets[key];
+  document.getElementById('in-league').value = p.league;
+  document.getElementById('in-k9').value = p.k9;
+  document.getElementById('in-bb9').value = p.bb9;
+  document.getElementById('in-velo').value = p.velo;
+  document.getElementById('in-ip').value = p.ip;
+  evaluate();
+}
+
+// 유사 사례 찾기 — 학습 데이터에서 K/9, BB/9 거리가 가장 가까운 선수
+function findSimilar(k9, bb9, league){
+  const candidates = PLAYERS.filter(p => p.k9 != null && p.bb9 != null && p.war != null);
+  if (candidates.length === 0) return null;
+  let best = null, bestDist = Infinity;
+  candidates.forEach(p => {
+    let d = Math.pow((p.k9 - k9)/2.0, 2) + Math.pow((p.bb9 - bb9)/1.5, 2);
+    if (p.league === league) d *= 0.6;  // 같은 리그면 거리 축소
+    if (d < bestDist){ bestDist = d; best = p; }
+  });
+  return best;
+}
+
+function evaluate(){
+  const league = document.getElementById('in-league').value;
+  const k9 = parseFloat(document.getElementById('in-k9').value) || 0;
+  const bb9 = parseFloat(document.getElementById('in-bb9').value) || 0;
+  const velo = parseFloat(document.getElementById('in-velo').value) || 0;
+  const ip = parseFloat(document.getElementById('in-ip').value) || 0;
+
+  // 간소화 로지스틱 회귀 (데모용 — 실제 엔진은 Python sklearn)
+  const kbb = k9 - bb9;
+  let z = -2.2;
+  z += kbb * 0.32;
+  z += (velo - 92) * 0.18;
+  z += (k9 - 7.5) * 0.15;
+  z -= (bb9 - 2.5) * 0.20;
+  if (league === 'NPB') z += 0.55;
+  if (league === 'AAA-PCL') z += 0.30;
+  if (league === 'AAA-IL') z -= 0.35;
+  if (ip < 60) z -= 0.8;
+
+  const prob = 1 / (1 + Math.exp(-z));
+  const pct = Math.round(prob * 100);
+
+  const circumference = 2 * Math.PI * 92;
+  const fill = document.getElementById('gauge-fill');
+  fill.style.strokeDasharray = circumference;
+  fill.style.strokeDashoffset = circumference * (1 - prob);
+
+  let color, tier, tierClass;
+  if (prob >= 0.55) { color = '#00FF94'; tier = '🟢 GREEN — 계약 검토 가능'; tierClass = 'tier-green'; }
+  else if (prob >= 0.35) { color = '#FFD93B'; tier = '🟡 YELLOW — 추가 검증 필요'; tierClass = 'tier-yellow'; }
+  else { color = '#FF3B6B'; tier = '🔴 RED — 영입 비추천'; tierClass = 'tier-red'; }
+
+  fill.setAttribute('stroke', color);
+  document.getElementById('gauge-pct').textContent = pct + '%';
+  document.getElementById('gauge-pct').style.color = color;
+  const badge = document.getElementById('tier-badge');
+  badge.textContent = tier;
+  badge.className = 'tier-badge ' + tierClass;
+
+  // ===== 구체적 4줄 분석 + 유사 사례 =====
+  const similar = findSimilar(k9, bb9, league);
+  const lines = [];
+
+  // 1줄: K-BB 진단
+  if (kbb >= 5.5) lines.push(`✅ K-BB ${kbb.toFixed(1)}: 제구·탈삼진 균형이 우수합니다. 성공 외인의 공통 패턴입니다.`);
+  else if (kbb >= 3.5) lines.push(`🟡 K-BB ${kbb.toFixed(1)}: 평범한 수준입니다. 다른 요소로 보완돼야 합니다.`);
+  else lines.push(`🔴 K-BB ${kbb.toFixed(1)}: 탈삼진 대비 볼넷이 많습니다. KBO 타선 상대로 위험합니다.`);
+
+  // 2줄: 리그 환경 진단
+  if (league === 'AAA-IL') lines.push(`⚠️ AAA-IL은 투수친화 리그라 스탯이 부풀려집니다. 같은 수치라도 PCL/MLB보다 할인해서 봐야 합니다.`);
+  else if (league === 'NPB') lines.push(`✅ NPB 출신은 변화구·제구가 KBO에 잘 적응하는 편입니다. 환경 프리미엄이 있습니다.`);
+  else if (league === 'MLB') lines.push(`🟡 MLB 직전 기록은 표본이 작거나 불펜 기록일 수 있어 선발 환산 시 주의가 필요합니다.`);
+  else lines.push(`🟡 AAA-PCL은 타자친화 리그라 이 정도 스탯이면 실제 구위는 더 좋을 수 있습니다.`);
+
+  // 3줄: 표본/구속 진단
+  if (ip < 60) lines.push(`🔴 직전 시즌 ${ip}이닝: 표본이 너무 적어 평가 신뢰도가 급락합니다. 풀시즌 130이닝 환산이 불가능합니다.`);
+  else if (velo < 91) lines.push(`🔴 평속 ${velo}mph: KBO에서 구속만으로는 부족합니다. 변화구 의존도가 높아 위험합니다.`);
+  else lines.push(`✅ 평속 ${velo}mph·${ip}이닝: 풀시즌 소화 가능한 워크로드와 구위를 갖췄습니다.`);
+
+  // 4줄: 유사 사례 매칭
+  if (similar){
+    const outcome = similar.war >= 3.5 ? `성공(WAR ${similar.war.toFixed(1)}, 재계약)` : `실패(WAR ${similar.war.toFixed(1)}, 방출)`;
+    const verdict = similar.war >= 3.5 ? '긍정적 신호입니다.' : '같은 함정에 빠질 위험이 있습니다.';
+    lines.push(`📊 유사 사례: <b style="color:var(--neon)">${similar.name}</b> (${similar.league}, K/9 ${similar.k9}·BB/9 ${similar.bb9})와 가장 닮았고, 그 선수는 KBO에서 ${outcome}했습니다. ${verdict}`);
+  }
+
+  document.getElementById('result-note').innerHTML = lines.join('<br><br>');
+}
+
+// ===== 스크롤 애니메이션 =====
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// 초기 실행
+loadData();
+evaluate();
+</script>
+</body>
+</html>

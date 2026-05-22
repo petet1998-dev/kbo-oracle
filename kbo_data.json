@@ -1,0 +1,210 @@
+[
+  {
+    "name": "Cody Ponce",
+    "league": "NPB",
+    "war": 8.38,
+    "label": "Success",
+    "k9": 7.52,
+    "bb9": 2.04
+  },
+  {
+    "name": "Dan Straily",
+    "league": "MLB",
+    "war": 8.12,
+    "label": "Success",
+    "k9": 6.23,
+    "bb9": 4.16
+  },
+  {
+    "name": "Eric Jokisch",
+    "league": "AAA-PCL",
+    "war": 6.02,
+    "label": "Success",
+    "k9": 7.33,
+    "bb9": 2.78
+  },
+  {
+    "name": "Yariel Jurado",
+    "league": "AAA-IL",
+    "war": 5.88,
+    "label": "Success",
+    "k9": 7.53,
+    "bb9": 1.51
+  },
+  {
+    "name": "Zach Logue",
+    "league": "AAA-PCL",
+    "war": 5.34,
+    "label": "Success",
+    "k9": 8.41,
+    "bb9": 2.59
+  },
+  {
+    "name": "Drew Rucinski",
+    "league": "MLB",
+    "war": 5.31,
+    "label": "Success",
+    "k9": 6.88,
+    "bb9": 3.31
+  },
+  {
+    "name": "Odrisamer Despaigne",
+    "league": "AAA-IL",
+    "war": 4.88,
+    "label": "Success",
+    "k9": 8.98,
+    "bb9": 3.18
+  },
+  {
+    "name": "Denyi Reyes",
+    "league": "AAA-IL",
+    "war": 4.47,
+    "label": "Success",
+    "k9": 7.07,
+    "bb9": 3.66
+  },
+  {
+    "name": "Charlie Barnes",
+    "league": "AAA-IL",
+    "war": 4.46,
+    "label": "Success",
+    "k9": 7.34,
+    "bb9": 2.84
+  },
+  {
+    "name": "Chad Bell",
+    "league": "AAA-IL",
+    "war": 4.29,
+    "label": "Success",
+    "k9": 8.74,
+    "bb9": 2.86
+  },
+  {
+    "name": "William Cuevas",
+    "league": "AAA-IL",
+    "war": 4.27,
+    "label": "Success",
+    "k9": 8.05,
+    "bb9": 2.53
+  },
+  {
+    "name": "Raul Alcantara",
+    "league": "AAA-PCL",
+    "war": 3.84,
+    "label": "Success",
+    "k9": 5.72,
+    "bb9": 1.08
+  },
+  {
+    "name": "Dietrich Enns",
+    "league": "NPB",
+    "war": 3.77,
+    "label": "Success",
+    "k9": 5.0,
+    "bb9": 3.83
+  },
+  {
+    "name": "Cole Irvin",
+    "league": "MLB",
+    "war": 2.57,
+    "label": "Failure",
+    "k9": 6.32,
+    "bb9": 2.35
+  },
+  {
+    "name": "Brock Dykxhoorn",
+    "league": "AAA-PCL",
+    "war": 2.29,
+    "label": "Failure",
+    "k9": 8.86,
+    "bb9": 2.76
+  },
+  {
+    "name": "Adrian Sampson",
+    "league": "MLB",
+    "war": 1.7,
+    "label": "Failure",
+    "k9": 7.25,
+    "bb9": 2.59
+  },
+  {
+    "name": "Shaun Anderson",
+    "league": "AAA-IL",
+    "war": 1.33,
+    "label": "Failure",
+    "k9": 7.77,
+    "bb9": 3.27
+  },
+  {
+    "name": "Jordan Balazovic",
+    "league": "AAA-IL",
+    "war": 1.25,
+    "label": "Failure",
+    "k9": 10.6,
+    "bb9": 6.31
+  },
+  {
+    "name": "Deck McGuire",
+    "league": "AAA-IL",
+    "war": 1.22,
+    "label": "Failure",
+    "k9": 7.85,
+    "bb9": 4.4
+  },
+  {
+    "name": "Eddie Butler",
+    "league": "MLB",
+    "war": 0.75,
+    "label": "Failure",
+    "k9": 5.26,
+    "bb9": 3.44
+  },
+  {
+    "name": "Glenn Sparkman",
+    "league": "NPB",
+    "war": 0.71,
+    "label": "Failure",
+    "k9": 7.41,
+    "bb9": 4.24
+  },
+  {
+    "name": "Mike Montgomery",
+    "league": "MLB",
+    "war": 0.6,
+    "label": "Failure",
+    "k9": 6.75,
+    "bb9": 1.69
+  },
+  {
+    "name": "Justin Haley",
+    "league": "AAA-IL",
+    "war": 0.4,
+    "label": "Failure",
+    "k9": 8.47,
+    "bb9": 2.61
+  },
+  {
+    "name": "Beau Sulser",
+    "league": "AAA-IL",
+    "war": 0.35,
+    "label": "Failure",
+    "k9": 9.53,
+    "bb9": 2.22
+  },
+  {
+    "name": "Jacob Turner",
+    "league": "AAA-IL",
+    "war": 0.06,
+    "label": "Failure",
+    "k9": 6.49,
+    "bb9": 3.2
+  },
+  {
+    "name": "Anthony Ranaudo",
+    "league": "AAA-IL",
+    "war": -0.22,
+    "label": "Failure",
+    "k9": 6.79,
+    "bb9": 1.23
+  }
+]
